@@ -71,48 +71,10 @@ echo
 echo "Making changes using fdisk..."
 printf "d\n2\nn\np\n2\n$PART_START\n$PART_END\np\nw\n" | fdisk /dev/mmcblk0
 echo
-echo Setting up init.d resize2fs_once script
+partprobe /dev/mmcblk0
+resize2fs /dev/mmcblk0p2 &&
 
-cat <<\EOF > /etc/init.d/resize2fs_once &&
-#!/bin/sh
-### BEGIN INIT INFO
-# Provides: resize2fs_once
-# Required-Start:
-# Required-Stop:
-# Default-Start: 2 3 4 5
-# Default-Stop: 0 1 6
-# Short-Description: Run resize2fs_once on boot
-# Description:
-### END INIT INFO
-
-. /lib/lsb/init-functions
-
-case "$1" in
-  start)
-    log_daemon_msg "Starting resize2fs_once, THIS WILL TAKE A FEW MINUTES " && 
-    
-    # Do our stuff....   
-    resize2fs /dev/mmcblk0p2 &&
-    
-    # Okay, not lets remove this script
-    rm /etc/init.d/resize2fs_once &&
-    update-rc.d resize2fs_once remove &&
-    log_end_msg $?
-    ;;
-  *)
-    echo "Usage: $0 start" >&2
-    exit 3
-    ;;
-esac
-EOF
-  chmod +x /etc/init.d/resize2fs_once &&
-  update-rc.d resize2fs_once defaults &&
-
-echo
 echo #####################################################################
-echo System is now ready to resize your system.  A REBOOT IS REQUIRED NOW!
-echo Syncing....
-echo
 sync
 
 ###################################################################
